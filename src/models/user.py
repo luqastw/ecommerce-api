@@ -37,7 +37,11 @@ class User(BaseModel):
     )
 
     username = Column(
-        String, unique=True, index=True, nullable=True, comment="Nome de usuário único."
+        String,
+        unique=True,
+        index=True,
+        nullable=False,
+        comment="Nome de usuário único.",
     )
 
     hashed_password = Column(String, nullable=False, comment="Senha com bcrypt.")
