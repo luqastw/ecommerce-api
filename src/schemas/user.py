@@ -42,6 +42,12 @@ class UserCreate(BaseModel):
     }
     """
 
+    email: EmailStr
+    username: str = Field(
+        min_length=5,
+        max_length=50,
+        description="Nome de usuário (mínimo 5 caracteres.)",
+    )
     password: str = Field(
         min_length=8, max_length=16, description="Senha (mínimo 8 caracteres)"
     )

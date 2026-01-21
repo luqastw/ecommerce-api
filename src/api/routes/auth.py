@@ -69,11 +69,11 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)) -> UserRespon
     hashed_password = get_password_hash(user_data.password)
 
     db_user = User(
-            email = user_data.email,
-            username = user_data.username,
-            hashed_password = hashed_password,
-            is_active = True,
-            is_superuser = False
+        email=user_data.email,
+        username=user_data.username,
+        hashed_password=hashed_password,
+        is_active=True,
+        is_superuser=False,
     )
 
     db.add(db_user)
@@ -81,19 +81,16 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)) -> UserRespon
     db.refresh(db_user)
 
     return UserResponse.model_validate(db_user)
-)
+
 
 @router.post(
-    '/login',
+    "/login",
     response_model=TokenResponse,
     status_code=status.HTTP_200_OK,
-    summary='Login de usuário.',
-    description='Autentica usuário com email e senha, retorna JWT Token.',
+    summary="Login de usuário.",
+    description="Autentica usuário com email e senha, retorna JWT Token.",
 )
-def login (
-    credentials: UserLogin,
-    db: Session = Depends(get_db)
-) -> TokenResponse:
+def login(credentials: UserLogin, db: Session = Depends(get_db)) -> TokenResponse:
     """
     Login de usuário.
 
@@ -104,14 +101,14 @@ def login (
     4. Verifica senha (compara hash).
     5. Gera JWT token.
     6. Retorna token.
-    
+
     Args:
         credentials: Email e senha do usuário.
         db: Sessão do banco de dados.
-    
+
     Returns:
         TokenResponse: Access token JWT.
-    
+
     Raises:
         HTTPException 401: Credenciais inválidas ou usuário inativo.
     """
@@ -121,31 +118,27 @@ def login (
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Email ou senha incorretos.',
-            headers={'WWW-Authenticate': 'Bearer'},
+            detail="Email ou senha incorretos.",
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
     if not verify_password(credentials.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Email ou senha incorretos.',
-            headers={'WWW-Authenticate': 'Bearer'},
+            detail="Email ou senha incorretos.",
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Conta inativa.',
-            headers={'WWW-Authenticate': 'Bearer'},
+            detail="Conta inativa.",
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
     acess_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     acess_token = create_access_token(
-        data={'sub': str(user.id)},
-        expires_delta=acess_token_expires
+        data={"sub": str(user.id)}, expires_delta=acess_token_expires
     )
 
-    return TokenResponse(
-        acess_token=acess_token,
-        token_type='bearer'
-    )
+    return TokenResponse(acess_token=acess_token, token_type="bearer")
