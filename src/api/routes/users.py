@@ -2,12 +2,15 @@
 User management routes.
 """
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import ScalarResult
+from sqlalchemy.exc import UnsupportedCompilationError
 from sqlalchemy.orm import Session
 
 from src.api.deps import get_db, get_current_user
 from src.models.user import User
-from src.schemas.user import UserResponse
+from src.schemas.user import UserResponse, UserUpdate
+from src.core.security import get_password_hash
 
 
 router = APIRouter()
@@ -28,4 +31,74 @@ def get_current_user_data(
     Returns:
         UserResponse: Dados do usuário (sem senha)
     """
+    return UserResponse.model_validate(current_user)
+
+
+@router.patch("/me", response_model=UserUpdate, summary="Atualizar perfil do usuário.")
+def update_current_user(
+    user_update: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> UserResponse:
+    """
+    Atualiza dados do usuário autenticado.
+
+    Permite atualização parcial (PATCH):
+    - email (valida se não existe)
+    - username (valida se não existe)
+    - password (será hasheada)
+
+    Args:
+        user_update: Dados a serem atualizados
+        current_user: Usuário autenticado (via JWT)
+        db: Sessão do banco
+
+    Returns:
+        UserResponse: Dados atualizados
+
+    Raises:
+        HTTPException 400: Email ou username já existem
+    """
+
+    update_data = user_update.model_dump(exclude_unset=True)
+
+    if not update_data:
+        return UserResponse.model_validate(current_user)
+
+    if "email" in update_data:
+        existing_email = (
+            db.query(User)
+            .filter(User.email == update_data["email"], User.id != current_user.id)
+            .first()
+        )
+
+        if existing_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Email já em uso."
+            )
+
+    if "username" in update_data:
+        existing_username = (
+            db.query(User)
+            .filter(
+                User.username == update_data["username"], User.id != current_user.id
+            )
+            .first()
+        )
+
+        if existing_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="User já em uso."
+            )
+
+    if "password" in update_data:
+        update_data["hashed_password"] = get_password_hash(update_data["password"])
+        del update_data["password"]
+
+    for field, value in update_data.items()
+        setattr(current_user, field, value)
+
+    db.commit()
+    db.refresh(current_user)
+
     return UserResponse.model_validate(current_user)
