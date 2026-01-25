@@ -2,6 +2,7 @@
 User management routes.
 """
 
+from os import stat
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import ScalarResult
 from sqlalchemy.exc import UnsupportedCompilationError
@@ -86,7 +87,7 @@ def update_current_user(
             .first()
         )
 
-        if existing_email:
+        if existing_username:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="User já em uso."
             )
@@ -95,10 +96,41 @@ def update_current_user(
         update_data["hashed_password"] = get_password_hash(update_data["password"])
         del update_data["password"]
 
-    for field, value in update_data.items()
+    for field, value in update_data.items():
         setattr(current_user, field, value)
 
     db.commit()
     db.refresh(current_user)
 
     return UserResponse.model_validate(current_user)
+
+
+@router.delete(
+    "/me", status_code=status.HTTP_204_NO_CONTENT, summary="Desativar conta de usuário."
+)
+def deactivate_account(
+    current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+):
+    """
+    Desativa conta do usuário (soft delete).
+
+    O usuário não é deletado do banco, apenas marcado como inativo.
+    Isso preserva histórico de pedidos, reviews, etc.
+
+    Após desativação:
+    - Não pode fazer login
+    - Não pode acessar rotas protegidas
+    - Admin pode reativar se necessário
+
+    Args:
+        current_user: Usuário autenticado
+        db: Sessão do banco
+
+    Returns:
+        204 No Content (sem body)
+    """
+
+    current_user.is_active = False
+    db.commit()
+
+    return None
