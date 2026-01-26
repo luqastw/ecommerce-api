@@ -5,6 +5,7 @@ Initialize database: create all tables.
 from src.db.base import Base
 from src.db.session import engine
 from src.models.user import User
+from src.models.product import Product
 
 
 def init_db() -> None:
