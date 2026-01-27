@@ -2,15 +2,11 @@
 Pydantic schema para a validação de dados relacionados a produtos.
 """
 
-import decimal
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 from decimal import Decimal
-from datetime import date, datetime
+from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import desc
-
-from src.db.base import Base
 from src.models.product import ProductCategory
 
 
@@ -21,7 +17,7 @@ class ProductBase(BaseModel):
 
     name: str = Field(min_length=3, max_length=200, description="Nome do produto.")
     description: Optional[str] = Field(None, description="Descrição do produto.")
-    price: decimal = Field(gt=0, description="Preço do produto.")
+    price: Decimal = Field(gt=0, description="Preço do produto.")
     category: ProductCategory = Field(description="Cateegoria do produto.")
 
 
@@ -85,10 +81,11 @@ class ProductUpdate(BaseModel):
 
     name: Optional[str] = Field(None, min_length=3, max_length=200)
     description: Optional[str] = None
-    price: Optional[decimal] = Field(None, gt=0)
+    price: Optional[Decimal] = Field(None, gt=0)
     category: Optional[ProductCategory] = None
     stock: Optional[int] = Field(None, ge=0)
     image_url: Optional[str] = Field(None, max_length=500)
+    is_active: Optional[bool] = None
 
     @field_validator("price")
     @classmethod

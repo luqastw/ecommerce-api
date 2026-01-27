@@ -97,3 +97,33 @@ def get_current_user(
         )
 
     return user
+
+
+def get_current_admin(current_user: User = Depends(get_current_user)) -> User:
+    """
+    Dependency que verifica se o usuário autenticado é admin.
+
+    Usa get_current_user para autenticar, depois verifica is_superuser.
+
+    Args:
+        current_user: Usuário autenticado (via get_current_user)
+
+    Returns:
+        User: Usuário admin
+
+    Raises:
+        HTTPException 403: Se usuário não for admin
+
+    Uso:
+        @app.post("/products")
+        def create_product(current_admin: User = Depends(get_current_admin)):
+            # Só admins chegam aqui!
+    """
+
+    if not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Sem permissão. Apenas administradores podem acessar essa função.",
+        )
+
+    return current_user

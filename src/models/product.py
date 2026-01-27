@@ -62,4 +62,4 @@ class Product(BaseModel):
         """
         Representação em string para debugging.
         """
-        return f'<Product(id={self.id}, name={self.name), price={self.price})>'
+        return f"<Product(id={self.id}, name={self.name}, price={self.price})>"
