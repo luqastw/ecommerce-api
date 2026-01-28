@@ -6,6 +6,7 @@ from src.db.base import Base
 from src.db.session import engine
 from src.models.user import User
 from src.models.product import Product
+from src.models.cart import Cart, CartItem
 
 
 def init_db() -> None:

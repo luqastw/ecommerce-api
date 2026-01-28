@@ -2,8 +2,8 @@
 User model - represents users table in database.
 """
 
-from sqlalchemy import BooleanClauseList, Column, String, Boolean, null, true
-from sqlalchemy.sql.traversals import _flatten_clauseelement
+from sqlalchemy import Column, String, Boolean
+from sqlalchemy.orm import relationship
 from src.db.base import BaseModel
 
 
@@ -59,6 +59,8 @@ class User(BaseModel):
         nullable=False,
         comment="Indica se o usuário tem privilégios de administrador.",
     )
+
+    cart = relationship("Cart", back_populates="user", uselist=False)
 
     def __repr__(self) -> str:
         """
