@@ -10,18 +10,11 @@ Responsabilidades:
 - Calcular totais
 """
 
-from os import stat_result
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import select
 from fastapi import Depends, HTTPException, status
-from decimal import Decimal, DecimalTuple
+from decimal import Decimal
 from typing import Optional
 
-from sqlalchemy.orm.clsregistry import _determine_container
-from sqlalchemy.sql.functions import user
-
-from src.models import product
-from src.models import cart
 from src.models.cart import Cart, CartItem
 from src.models.product import Product
 from src.schemas.cart import CartItemCreate, CartItemUpdate
@@ -141,13 +134,13 @@ class CartService:
             db.refresh(existing_item)
 
             return existing_item
-        
+
         else:
             cart_item = CartItem(
-                cart_id = cart.id,
-                product_id = item_data.product_id,
-                quantity = item_data.quantity
-                price_at_add = product.price
+                cart_id=cart.id,
+                product_id=item_data.product_id,
+                quantity=item_data.quantity,
+                price_at_add=product.price,
             )
 
             db.add(cart_item)
@@ -158,51 +151,48 @@ class CartService:
 
     @staticmethod
     def update_item_quantity(
-            db: Session,
-            user_id: int,
-            item_id: int,
-            update_data: CartItemUpdate
+        db: Session, user_id: int, item_id: int, update_data: CartItemUpdate
     ) -> CartItem:
         """
         Atualiza quantidade de um item do carrinho.
-        
+
         Validações:
         - Item pertence ao usuário (segurança)
         - Estoque suficiente para nova quantidade
-        
+
         Args:
             db: Sessão do banco
             user_id: ID do usuário
             item_id: ID do item no carrinho
             update_data: Nova quantidade
-            
+
         Returns:
             CartItem: Item atualizado
-            
+
         Raises:
             HTTPException 404: Item não encontrado no carrinho do usuário
             HTTPException 400: Estoque insuficiente
         """
 
-        cart_item = db.query(CartItem).join(Cart).filter(
-            CartItem.id == item_id,
-            Cart.user_id == user_id
-        ).first()
+        cart_item = (
+            db.query(CartItem)
+            .join(Cart)
+            .filter(CartItem.id == item_id, Cart.user_id == user_id)
+            .first()
+        )
 
         if not cart_item:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail='Item não encontrado no seu carrinho.'
+                detail="Item não encontrado no seu carrinho.",
             )
 
-        product = db.query(Product).filter(
-            Product.id == cart_item.product_id
-        ).filter()
+        product = db.query(Product).filter(Product.id == cart_item.product_id).first()
 
         if product.stock < update_data.quantity:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Estoque insuficiente. Disponível: {product.stock}'
+                detail="Estoque insuficiente. Disponível: {product.stock}",
             )
 
         cart_item.quantity = update_data.quantity
@@ -215,25 +205,27 @@ class CartService:
     def remove_item(db: Session, user_id: int, item_id: int) -> None:
         """
         Remove item do carrinho.
-        
+
         Args:
             db: Sessão do banco
             user_id: ID do usuário
             item_id: ID do item a remover
-            
+
         Raises:
             HTTPException 404: Item não encontrado no carrinho do usuário
         """
 
-        cart_item = db.query(CartItem).join(Cart).filter(
-            CartItem.id == item_id,
-            Cart.user_id == user_id
-        ).first()
+        cart_item = (
+            db.query(CartItem)
+            .join(Cart)
+            .filter(CartItem.id == item_id, Cart.user_id == user_id)
+            .first()
+        )
 
         if not cart_item:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail='Item não encontrado no carrinho.'
+                detail="Item não encontrado no carrinho.",
             )
 
         db.delete(cart_item)
@@ -243,11 +235,11 @@ class CartService:
     def clear_cart(db: Session, user_id: int) -> None:
         """
         Remove todos os itens do carrinho.
-        
+
         Útil para:
         - Após finalizar compra
         - Botão "Limpar carrinho" na UI
-        
+
         Args:
             db: Sessão do banco
             user_id: ID do usuário
@@ -263,36 +255,39 @@ class CartService:
     def get_cart_with_details(db: Session, user_id: int) -> Optional[Cart]:
         """
         Busca carrinho com todos os detalhes usando eager loading.
-        
+
         Evita problema N+1:
         - SEM joinedload: 1 query para cart + N queries para items + N queries para products
         - COM joinedload: 1 query com JOINs traz tudo de uma vez
-        
+
         Args:
             db: Sessão do banco
             user_id: ID do usuário
-            
+
         Returns:
             Cart | None: Carrinho com items e products carregados, ou None
         """
 
-        cart = db.query(Cart).options(
-            joinedload(Cart.items).joinedload(CartItem.product)
-        ).filter(Cart.user_id == user_id).filter()
-        
+        cart = (
+            db.query(Cart)
+            .options(joinedload(Cart.items).joinedload(CartItem.product))
+            .filter(Cart.user_id == user_id)
+            .first()
+        )
+
         return cart
 
     @staticmethod
     def calculate_totals(cart: Cart) -> tuple[int, Decimal]:
         """
         Calcula total de itens e preço total do carrinho.
-        
+
         Args:
             cart: Carrinho com items carregados (use get_cart_with_details)
-            
+
         Returns:
             tuple: (total_items, total_price)
-            
+
         Exemplo:
             cart = CartService.get_cart_with_details(db, user_id)
             total_items, total_price = CartService.calculate_totals(cart)
@@ -301,13 +296,12 @@ class CartService:
         """
 
         if not cart or not cart.items:
-            return 0, Decimal('0.00')
+            return 0, Decimal("0.00")
 
         total_items = sum(item.quantity for item in cart.items)
 
         total_price = sum(
-            Decimal(str(item.price_at_add)) * item.quantity
-            for item in cart.items
+            Decimal(str(item.price_at_add)) * item.quantity for item in cart.items
         )
-        
+
         return total_items, total_price
