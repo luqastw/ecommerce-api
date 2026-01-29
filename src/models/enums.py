@@ -20,3 +20,21 @@ class ProductCategory(str, Enum):
     CASA = "casa"
     BELEZA = "beleza"
     BRINQUEDOS = "brinquedos"
+
+
+class OrderStatus(str, Enum):
+    """
+    Status possíveis de um pedido.
+
+    Fluxo típico:
+    PENDING -> PAID -> SHIPPED -> DELIVERED
+
+    Pode também:
+    PENDING -> CANCELLED
+    """
+
+    PENDING = "pending"
+    PAID = "paid"
+    SHIPPED = "shipped"
+    DELIVERED = "delivered"
+    CANCELLED = "cancelled"

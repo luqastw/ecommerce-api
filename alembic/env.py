@@ -20,6 +20,7 @@ from src.db.base import Base
 from src.models.user import User
 from src.models.product import Product
 from src.models.cart import Cart, CartItem
+from src.models.order import Order, OrderItem
 
 config = context.config
 
