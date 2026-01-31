@@ -202,7 +202,7 @@ def get_order(
         401: Não autenticado
     """
 
-    order = OrderService.get_order_by_id(db, order_id, order.user_id)
+    order = OrderService.get_order_by_id(db, order_id, current_user.id)
 
     if not order:
         raise HTTPException(

@@ -105,7 +105,7 @@ class OrderService:
 
         order_items = []
 
-        for cart_items in cart.items:
+        for cart_item in cart.items:
             order_item = OrderItem(
                 order_id=order.id,
                 product_id=cart_item.product_id,
