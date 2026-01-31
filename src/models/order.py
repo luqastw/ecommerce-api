@@ -2,20 +2,17 @@
 Order models - represents orders and order_items tables in database.
 """
 
-from operator import truediv
 from sqlalchemy import (
     Column,
     Integer,
     ForeignKey,
     Numeric,
-    ReleaseSavepointClause,
     String,
     Enum as SQLENum,
     CheckConstraint,
-    null,
 )
-from sqlalchemy.orm import foreign, relationship
-from sqlalchemy.sql.roles import ColumnListRole
+
+from sqlalchemy.orm import relationship
 from src.db.base import BaseModel
 from src.models.enums import OrderStatus
 
@@ -118,10 +115,18 @@ class OrderItem(BaseModel):
 
     order_id = Column(
         Integer,
+        ForeignKey("orders.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+        comment="ID do pedido.",
+    )
+
+    product_id = Column(
+        Integer,
         ForeignKey("products.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
-        comment="ID do produto (NULL se produto foi deletado).",
+        comment="ID do produto.",
     )
 
     product_name = Column(

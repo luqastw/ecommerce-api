@@ -101,7 +101,7 @@ class OrderService:
         )
 
         db.add(order)
-        db.flush
+        db.flush()
 
         order_items = []
 
