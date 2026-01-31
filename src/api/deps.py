@@ -4,7 +4,6 @@ FastAPI dependencies for dependency injection.
 
 from typing import Generator
 from fastapi import status, HTTPException, Depends
-from fastapi import security
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 

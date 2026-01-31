@@ -4,7 +4,6 @@ Product routes - CRUD operations for products.
 
 from typing import List
 from fastapi import APIRouter, HTTPException, status, Depends, Query
-from sqlalchemy import Column
 from sqlalchemy.orm import Session
 
 from src.api.deps import get_db, get_current_admin

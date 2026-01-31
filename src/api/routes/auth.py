@@ -3,9 +3,7 @@ Authentication routes: register and login.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.routing import Dependant, email
 from sqlalchemy.orm import Session
-from sqlalchemy.sql.functions import session_user
 
 from src.api.deps import get_db
 from src.models.user import User
