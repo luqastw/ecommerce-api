@@ -2,10 +2,7 @@
 User management routes.
 """
 
-from os import stat
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import ScalarResult
-from sqlalchemy.exc import UnsupportedCompilationError
 from sqlalchemy.orm import Session
 
 from src.api.deps import get_db, get_current_user

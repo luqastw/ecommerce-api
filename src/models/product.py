@@ -2,9 +2,7 @@
 Product model - represents products table in database.
 """
 
-import decimal
 from sqlalchemy import Column, String, Text, Numeric, Integer, Boolean, Enum as SQLEnum
-from sqlalchemy.sql.roles import ColumnListRole
 from src.db.base import BaseModel
 from src.models.enums import ProductCategory
 

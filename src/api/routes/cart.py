@@ -4,12 +4,8 @@ Cart routes - Shopping cart endpoints.
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
-
-from sqlalchemy.sql.functions import user
 
 from src.api.deps import get_db, get_current_user
-from src.models.cart import Cart
 from src.models.user import User
 from src.schemas.cart import (
     CartItemCreate,
@@ -18,7 +14,6 @@ from src.schemas.cart import (
     CartResponse,
     CartSummary,
 )
-from src.services import cart_service
 from src.services.cart_service import CartService
 
 router = APIRouter()

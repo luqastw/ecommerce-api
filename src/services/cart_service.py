@@ -11,7 +11,7 @@ Responsabilidades:
 """
 
 from sqlalchemy.orm import Session, joinedload
-from fastapi import Depends, HTTPException, status
+from fastapi import HTTPException, status
 from decimal import Decimal
 from typing import Optional
 

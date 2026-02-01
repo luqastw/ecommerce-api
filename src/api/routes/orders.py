@@ -3,7 +3,6 @@ Order routes - Order management and checkout endpoints.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from fastapi.security import http
 from sqlalchemy.orm import Session
 from typing import List
 from decimal import Decimal
@@ -12,13 +11,11 @@ from src.api.deps import get_db, get_current_user, get_current_admin
 from src.models.order import Order, OrderItem
 from src.models.user import User
 from src.schemas.order import (
-    OrderCreate,
     OrderResponse,
     OrderSummary,
     OrderUpdateStatus,
     OrderItemResponse,
 )
-from src.services import order_service
 from src.services.order_service import OrderService
 
 router = APIRouter()
