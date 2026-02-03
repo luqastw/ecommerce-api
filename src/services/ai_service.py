@@ -22,7 +22,7 @@ class AIService:
     Service para funcionalidades de IA usando ferramentas gratuitas.
     """
 
-    CHAT_MODEL = "llama-3.1-70b-versatile"
+    CHAT_MODEL = "llama-3.3-70b-versatile"
 
     @staticmethod
     def generate_product_embedding(product: Product) -> np.ndarray:
@@ -165,7 +165,8 @@ class AIService:
 
         context = "Produtos disponíveis:\n\n"
 
-        for i, product in enumerate(relevant_products, 1):
+        for i, item in enumerate(relevant_products, 1):
+            product = item["product"]
             context += f"{i}. {product.name}\n"
             context += f"   Categoria: {product.category.value}\n"
             context += f"   Preço: R$ {product.price}\n"
