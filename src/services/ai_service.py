@@ -51,9 +51,7 @@ class AIService:
         return embedding
 
     @staticmethod
-    def search_similar_products(
-        db: Session, query: str, limit: int = 5
-    ) -> List[Product]:
+    def search_similar_products(db: Session, query: str, limit: int = 5) -> List[dict]:
         """
         Busca semântica de produtos.
 
@@ -92,7 +90,7 @@ class AIService:
 
         similarities.sort(key=lambda x: x["similarity"], reverse=True)
 
-        return [s["product"] for s in similarities[:limit]]
+        return similarities[:limit]
 
     @staticmethod
     def get_personalized_recommendations(
