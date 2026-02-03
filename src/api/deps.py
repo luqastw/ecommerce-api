@@ -1,5 +1,5 @@
 """
-FastAPI dependencies for dependency injection.
+Dependencies para injeção nas rotas FastAPI.
 """
 
 from typing import Generator
@@ -15,19 +15,7 @@ security = HTTPBearer()
 
 
 def get_db() -> Generator[Session, None, None]:
-    """
-    Dependency que fornece uma sessão do banco de dados.
-
-    Uso:
-        @app.get("/users")
-        def get_users(db: Session = Depends(get_db)):
-            users = db.query(User).all()
-            return users
-
-    Yields:
-        Session: Sessão SQLAlchemy.
-    """
-
+    """Fornece sessão do banco (abre no início, fecha no finally)."""
     db = SessionLocal()
     try:
         yield db
@@ -40,32 +28,10 @@ def get_current_user(
     db: Session = Depends(get_db),
 ) -> User:
     """
-    Dependency que autentica o usuário via JWT Token.
-
-    Extrai o token do header Authorization, decodifica, busca o usuário no banco e retorna.
-
-    Lança HTTPException 401 se:
-    - Token inválido.
-    - Token expirado.
-    - Usuário não encontrado.
-    - Usuário inativo.
-
-    Args:
-        credentials: JWT Token extraído do header.
-        db: Sessão do banco de dados.
-
-    Returns:
-        User: Usuário autenticado.
-
-    Raises:
-        HTTPException: 401 se autenticação falhar.
-
-    Uso:
-        @app.get("/users/me")
-        def get_me(current_user: User = Depends(get_current_user)):
-            return current_user
+    Autentica via JWT. Retorna User ou 401.
+    
+    Valida: token válido, não expirado, usuário existe e está ativo.
     """
-
     token = credentials.credentials
 
     payload = decode_access_token(token)
@@ -99,26 +65,7 @@ def get_current_user(
 
 
 def get_current_admin(current_user: User = Depends(get_current_user)) -> User:
-    """
-    Dependency que verifica se o usuário autenticado é admin.
-
-    Usa get_current_user para autenticar, depois verifica is_superuser.
-
-    Args:
-        current_user: Usuário autenticado (via get_current_user)
-
-    Returns:
-        User: Usuário admin
-
-    Raises:
-        HTTPException 403: Se usuário não for admin
-
-    Uso:
-        @app.post("/products")
-        def create_product(current_admin: User = Depends(get_current_admin)):
-            # Só admins chegam aqui!
-    """
-
+    """Verifica se usuário é admin (is_superuser=True). Retorna User ou 403."""
     if not current_user.is_superuser:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

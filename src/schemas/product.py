@@ -1,5 +1,5 @@
 """
-Pydantic schema para a validação de dados relacionados a produtos.
+Schemas de produto para validação de request/response.
 """
 
 from pydantic import BaseModel, Field, ConfigDict, field_validator
@@ -11,51 +11,21 @@ from src.models.product import ProductCategory
 
 
 class ProductBase(BaseModel):
-    """
-    Schema base com campos comuns a todos os schemas de produtos.
-    """
-
-    name: str = Field(min_length=3, max_length=200, description="Nome do produto.")
-    description: Optional[str] = Field(None, description="Descrição do produto.")
-    price: Decimal = Field(gt=0, description="Preço do produto.")
-    category: ProductCategory = Field(description="Cateegoria do produto.")
+    name: str = Field(min_length=3, max_length=200)
+    description: Optional[str] = None
+    price: Decimal = Field(gt=0)
+    category: ProductCategory
 
 
 class ProductCreate(ProductBase):
-    """
-    Schema para criação de produto (POST /products).
-
-    Campos adicionais opcionais:
-        - stock: Quantidade inicial em estoque (default: 0)
-        - image_url: URL da imagem (opcional)
-
-    Exemplo:
-        {
-            "name": "Notebook Dell Inspiron 15",
-            "description": "Notebook com processador Intel Core i5, 8GB RAM, 256GB SSD",
-            "price": 3499.90,
-            "category": "eletronicos",
-            "stock": 10,
-            "image_url": "https://exemplo.com/imagem.jpg"
-        }
-    """
-
-    stock: int = Field(
-        default=0, gt=0, description="Quantidade do produto disponível no estoque."
-    )
-    image_url: Optional[str] = Field(
-        None, max_length=500, description="URL com imagem do produto."
-    )
+    """Campos adicionais: stock (default 0), image_url (opcional)."""
+    stock: int = Field(default=0, gt=0)
+    image_url: Optional[str] = Field(None, max_length=500)
 
     @field_validator("price")
     @classmethod
     def validate_price_precision(cls, value: Decimal) -> Decimal:
-        """
-        Valida que o preço tem no máximo 2 casas decimais.
-
-        Evita valores como: 10.999 (três casas decimais).
-        """
-
+        """Máximo 2 casas decimais."""
         price_str = str(value)
         if "." in price_str:
             decimal_plates = len(price_str.split(".")[1])
@@ -67,18 +37,7 @@ class ProductCreate(ProductBase):
 
 
 class ProductUpdate(BaseModel):
-    """
-    Schema para atualização de produto (PATCH /products/{id}).
-
-    Todos os campos são opcionais (atualização parcial).
-
-    Exemplo:
-        {
-            "price": 3299.90,
-            "stock": 15
-        }
-    """
-
+    """Todos os campos opcionais (PATCH)."""
     name: Optional[str] = Field(None, min_length=3, max_length=200)
     description: Optional[str] = None
     price: Optional[Decimal] = Field(None, gt=0)
@@ -90,10 +49,7 @@ class ProductUpdate(BaseModel):
     @field_validator("price")
     @classmethod
     def validate_price_precision(cls, value: Optional[Decimal]) -> Optional[Decimal]:
-        """
-        Valida as casas decimais do preço.
-        """
-
+        """Máximo 2 casas decimais."""
         if value is None:
             return value
 
@@ -108,32 +64,6 @@ class ProductUpdate(BaseModel):
 
 
 class ProductResponse(ProductBase):
-    """
-    Schema para retornar dados de produto (response da API).
-
-    Campos adicionais:
-        - id
-        - stock
-        - image_url
-        - is_active
-        - created_at
-        - updated_at
-
-    Exemplo:
-        {
-            "id": 1,
-            "name": "Notebook Dell Inspiron 15",
-            "description": "Notebook com processador Intel Core i5...",
-            "price": 3499.90,
-            "category": "eletronicos",
-            "stock": 10,
-            "image_url": "https://exemplo.com/imagem.jpg",
-            "is_active": true,
-            "created_at": "2024-01-20T23:00:00Z",
-            "updated_at": "2024-01-20T23:00:00Z"
-        }
-    """
-
     id: int
     stock: int
     image_url: Optional[str]

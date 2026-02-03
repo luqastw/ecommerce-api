@@ -1,5 +1,5 @@
 """
-Product routes - CRUD operations for products.
+Rotas de produtos - CRUD com soft delete.
 """
 
 from typing import List
@@ -27,22 +27,6 @@ def create_product(
     current_admin: User = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ) -> ProductResponse:
-    """
-    Cria um novo produto.
-
-    Requer:
-        - Autenticação (JWT token)
-        - Permissão de administrador (is_superuser=True)
-
-    Args:
-        product_data: Dados do novo produto
-        current_admin: Usuário admin (via dependency)
-        db: Sessão do banco
-
-    Returns:
-        ProductResponse: Produto criado
-    """
-
     db_product = Product(
         name=product_data.name,
         description=product_data.description,
@@ -68,45 +52,13 @@ def create_product(
 )
 def list_products(
     db: Session = Depends(get_db),
-    limit: int = Query(
-        default=10, ge=1, le=100, description="Quantidade de produtos por página."
-    ),
-    offset: int = Query(default=0, ge=0, description="Número de produtos a pular."),
-    category: ProductCategory | None = Query(
-        default=None, description="Filtrar por categoria."
-    ),
-    min_price: float | None = Query(
-        default=None, ge=0, description="Filtrar por preço mínimo."
-    ),
-    max_price: float | None = Query(
-        default=None, ge=0, description="Filtrar por preço máximo."
-    ),
-    search: str | None = Query(
-        default=None, min_length=1, description="Buscar por nome do produto."
-    ),
+    limit: int = Query(default=10, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    category: ProductCategory | None = Query(default=None),
+    min_price: float | None = Query(default=None, ge=0),
+    max_price: float | None = Query(default=None, ge=0),
+    search: str | None = Query(default=None, min_length=1),
 ) -> List[ProductResponse]:
-    """
-    Lista produtos com paginação e filtros.
-
-    Acesso público (não requer autenticação).
-
-    Query Parameters:
-        - limit: Produtos por página (1-100, default: 10)
-        - offset: Produtos a pular (default: 0)
-        - category: Filtrar por categoria
-        - min_price: Preço mínimo
-        - max_price: Preço máximo
-        - search: Buscar no nome do produto
-
-    Returns:
-        Lista de produtos
-
-    Exemplos:
-        GET /products?limit=20&offset=0
-        GET /products?category=eletronicos&min_price=1000
-        GET /products?search=notebook&limit=5
-    """
-
     query = db.query(Product).filter(Product.is_active == True)
 
     if category:
@@ -135,22 +87,6 @@ def list_products(
     description="Retorna detalhes de um produto específico. Acesso público.",
 )
 def get_product(product_id: int, db: Session = Depends(get_db)) -> ProductResponse:
-    """
-    Retorna detalhes de um produto específico.
-
-    Acesso público (não requer autenticação).
-
-    Args:
-        product_id: ID do produto
-        db: Sessão do banco
-
-    Returns:
-        ProductResponse: Dados do produto
-
-    Raises:
-        HTTPException 404: Produto não encontrado
-    """
-
     product = (
         db.query(Product)
         .filter(Product.id == product_id, Product.is_active == True)
@@ -178,28 +114,6 @@ def update_product(
     current_admin: User = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ) -> ProductResponse:
-    """
-    Atualiza dados de um produto.
-
-    Permite atualização parcial (PATCH).
-
-    Requer:
-        - Autenticação (JWT token)
-        - Permissão de administrador (is_superuser=True)
-
-    Args:
-        product_id: ID do produto a atualizar
-        product_update: Dados a serem atualizados
-        current_admin: Usuário admin (via dependency)
-        db: Sessão do banco
-
-    Returns:
-        ProductResponse: Produto atualizado
-
-    Raises:
-        HTTPException 404: Produto não encontrado
-    """
-
     product = db.query(Product).filter(Product.id == product_id).first()
 
     if not product:
@@ -233,28 +147,7 @@ def delete_product(
     current_admin: User = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
-    """
-    Desativa um produto (soft delete).
-
-    O produto não é deletado do banco, apenas marcado como inativo.
-    Isso preserva histórico de pedidos e relatórios.
-
-    Requer:
-        - Autenticação (JWT token)
-        - Permissão de administrador (is_superuser=True)
-
-    Args:
-        product_id: ID do produto a desativar
-        current_admin: Usuário admin (via dependency)
-        db: Sessão do banco
-
-    Returns:
-        204 No Content (sem body)
-
-    Raises:
-        HTTPException 404: Produto não encontrado
-    """
-
+    """Soft delete - preserva histórico de pedidos."""
     product = db.query(Product).filter(Product.id == product_id).first()
 
     if not product:

@@ -1,5 +1,5 @@
 """
-Authentication routes: register and login.
+Rotas de autenticação - registro e login.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -23,33 +23,7 @@ router = APIRouter()
     description="Cria uma nova conta de usuário com email, username e senha.",
 )
 def register(user_data: UserCreate, db: Session = Depends(get_db)) -> UserResponse:
-    """
-    Registrar novo usuário.
-
-     Validações:
-    - Email único (não pode duplicar).
-    - Username único (não pode duplicar).
-    - Senha mínimo 8 caracteres (validado por Pydantic).
-
-    Processo:
-    1. Valida dados (Pydantic automático).
-    2. Verifica se email já existe.
-    3. Verifica se username já existe.
-    4. Hash da senha (bcrypt).
-    5. Salva no banco.
-    6. Retorna dados do usuário (sem senha).
-
-    Args:
-        user_data: Dados do novo usuário (email, username, password).
-        db: Sessão do banco de dados.
-
-    Returns:
-        UserResponse: Dados do usuário criado.
-
-    Raises:
-        HTTPException 400: Email ou username já existem.
-    """
-
+    """Valida unicidade de email/username, faz hash da senha."""
     existing_email = db.query(User).filter(User.email == user_data.email).first()
 
     if existing_email:
@@ -89,28 +63,7 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)) -> UserRespon
     description="Autentica usuário com email e senha, retorna JWT Token.",
 )
 def login(credentials: UserLogin, db: Session = Depends(get_db)) -> TokenResponse:
-    """
-    Login de usuário.
-
-    Processo:
-    1. Busca usuário por email.
-    2. Verifica se usuário existe.
-    3. Verifica se usuário está ativo.
-    4. Verifica senha (compara hash).
-    5. Gera JWT token.
-    6. Retorna token.
-
-    Args:
-        credentials: Email e senha do usuário.
-        db: Sessão do banco de dados.
-
-    Returns:
-        TokenResponse: Access token JWT.
-
-    Raises:
-        HTTPException 401: Credenciais inválidas ou usuário inativo.
-    """
-
+    """Verifica credenciais e retorna JWT. 401 se inválido/inativo."""
     user = db.query(User).filter(User.email == credentials.email).first()
 
     if not user:

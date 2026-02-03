@@ -1,5 +1,5 @@
 """
-User management routes.
+Rotas de usuário - perfil e configurações.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -20,15 +20,6 @@ router = APIRouter()
 def get_current_user_data(
     current_user: User = Depends(get_current_user),
 ) -> UserResponse:
-    """
-    Retorna dados do usuário autenticado.
-
-    Requer:
-        - Header: Authorization: Bearer <token>
-
-    Returns:
-        UserResponse: Dados do usuário (sem senha)
-    """
     return UserResponse.model_validate(current_user)
 
 
@@ -38,26 +29,7 @@ def update_current_user(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> UserResponse:
-    """
-    Atualiza dados do usuário autenticado.
-
-    Permite atualização parcial (PATCH):
-    - email (valida se não existe)
-    - username (valida se não existe)
-    - password (será hasheada)
-
-    Args:
-        user_update: Dados a serem atualizados
-        current_user: Usuário autenticado (via JWT)
-        db: Sessão do banco
-
-    Returns:
-        UserResponse: Dados atualizados
-
-    Raises:
-        HTTPException 400: Email ou username já existem
-    """
-
+    """Valida unicidade de email/username se alterados. Faz hash de nova senha."""
     update_data = user_update.model_dump(exclude_unset=True)
 
     if not update_data:
@@ -108,25 +80,7 @@ def update_current_user(
 def deactivate_account(
     current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ):
-    """
-    Desativa conta do usuário (soft delete).
-
-    O usuário não é deletado do banco, apenas marcado como inativo.
-    Isso preserva histórico de pedidos, reviews, etc.
-
-    Após desativação:
-    - Não pode fazer login
-    - Não pode acessar rotas protegidas
-    - Admin pode reativar se necessário
-
-    Args:
-        current_user: Usuário autenticado
-        db: Sessão do banco
-
-    Returns:
-        204 No Content (sem body)
-    """
-
+    """Soft delete - preserva histórico. Admin pode reativar."""
     current_user.is_active = False
     db.commit()
 

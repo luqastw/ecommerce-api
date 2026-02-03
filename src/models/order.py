@@ -19,28 +19,8 @@ from src.models.enums import OrderStatus
 
 class Order(BaseModel):
     """
-    Modelo de pedido.
-
-    Tabela: orders
-
-    Campos herdados de BaseModel:
-    - id: int (PK, auto-incrementado)
-    - created_at: datetime (data do pedido)
-    - updated_at: datetime (última atualização)
-
-    Campos específicos:
-    - user_id: ID do usuário que fez o pedido (FK)
-    - total_price: Valor total do pedido (congelado)
-    - status: Status atual do pedido (Enum)
-
-    Relacionamentos:
-    - user: Usuário que fez o pedido
-    - items: Itens do pedido (OrderItem)
-
-    Por que não referenciar cart?
-    - Pedido é snapshot permanente
-    - Carrinho é temporário e pode ser modificado
-    - Após criar pedido, carrinho é limpo
+    Pedido é snapshot permanente - não referencia cart pois carrinho é temporário.
+    total_price é congelado no momento da compra.
     """
 
     __tablename__ = "orders"
@@ -82,33 +62,8 @@ class Order(BaseModel):
 
 class OrderItem(BaseModel):
     """
-    Modelo de item do pedido.
-
-    Tabela: order_items
-
-    Campos herdados de BaseModel:
-    - id: int (PK, auto-incrementado)
-    - created_at: datetime
-    - updated_at: datetime
-
-    Campos específicos:
-    - order_id: ID do pedido (FK)
-    - product_id: ID do produto (FK)
-    - quantity: Quantidade comprada
-    - price: Preço unitário no momento da compra (congelado)
-    - product_name: Nome do produto (snapshot)
-
-    Por que salvar product_name?
-    - Se produto for deletado depois, ainda sabemos o que foi comprado
-    - Histórico permanente e completo
-
-    Por que price ao invés de price_at_add?
-    - Mais semântico para pedido (é o preço final pago)
-    - Vem do cart_item.price_at_add
-
-    Relacionamentos:
-    - order: Pedido ao qual pertence
-    - product: Produto referenciado (pode ser NULL se deletado)
+    product_name salvo como snapshot - se produto for deletado, histórico permanece.
+    product_id pode ser NULL (SET NULL on delete).
     """
 
     __tablename__ = "order_items"
@@ -150,5 +105,4 @@ class OrderItem(BaseModel):
     )
 
     def __repr__(self) -> str:
-        """Representação em string para debugging."""
         return f"<OrderItem(id={self.id}, order_id={self.order_id}, product={self.product_name}, qty={self.quantity})>"

@@ -1,5 +1,5 @@
 """
-AI Service - Integração com Groq + Hugging Face (100% gratuito).
+AI Service - RAG com Groq (LLM) + Sentence Transformers (embeddings locais).
 """
 
 import numpy as np
@@ -18,27 +18,12 @@ embedding_model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
 
 
 class AIService:
-    """
-    Service para funcionalidades de IA usando ferramentas gratuitas.
-    """
 
     CHAT_MODEL = "llama-3.3-70b-versatile"
 
     @staticmethod
     def generate_product_embedding(product: Product) -> np.ndarray:
-        """
-        Gera embedding de um produto LOCALMENTE (sem API).
-
-        Usa sentence-transformers (Hugging Face).
-        Roda na sua CPU (não precisa GPU).
-
-        Args:
-            product: Produto para vetorizar
-
-        Returns:
-            Array numpy com embedding (384 dimensões)
-        """
-
+        """Gera vetor de 384 dimensões do produto (roda local, sem API)."""
         text = f"""
         {product.name}
         {product.description or ""}
@@ -53,23 +38,10 @@ class AIService:
     @staticmethod
     def search_similar_products(db: Session, query: str, limit: int = 5) -> List[dict]:
         """
-        Busca semântica de produtos.
-
-        Como funciona:
-        1. Gera embedding da query (localmente)
-        2. Gera embeddings de todos produtos (localmente)
-        3. Calcula similaridade
-        4. Retorna os mais similares
-
-        Args:
-            db: Sessão do banco
-            query: Texto da busca
-            limit: Quantidade de resultados
-
-        Returns:
-            Lista de produtos mais similares
+        Busca semântica: vetoriza query → compara com produtos → retorna mais similares.
+        
+        ⚠️  Calcula embeddings em tempo real (ok para poucos produtos, lento em escala).
         """
-
         query_embedding = embedding_model.encode(query)
 
         products = db.query(Product).filter(Product.is_active == True).all()
@@ -96,18 +68,7 @@ class AIService:
     def get_personalized_recommendations(
         db: Session, user_id: int, limit: int = 5
     ) -> List[Product]:
-        """
-        Recomendações personalizadas baseadas no histórico.
-
-        Args:
-            db: Sessão do banco
-            user_id: ID do usuário
-            limit: Quantidade de recomendações
-
-        Returns:
-            Lista de produtos recomendados
-        """
-
+        """Recomenda produtos da categoria mais comprada pelo usuário."""
         orders = db.query(Order).filter(Order.user_id == user_id).all()
 
         if not orders:
@@ -149,18 +110,7 @@ class AIService:
 
     @staticmethod
     def chat_about_products(db: Session, user_message: str, user_id: int = None) -> str:
-        """
-        Chat com IA sobre produtos usando Groq.
-
-        Args:
-            db: Sessão do banco
-            user_message: Mensagem do usuário
-            user_id: ID do usuário (opcional)
-
-        Returns:
-            Resposta da IA
-        """
-
+        """Chat com RAG: busca produtos relevantes → injeta como contexto → LLM responde."""
         relevant_products = AIService.search_similar_products(db, user_message, limit=3)
 
         context = "Produtos disponíveis:\n\n"

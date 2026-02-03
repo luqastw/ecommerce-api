@@ -1,5 +1,5 @@
 """
-Order routes - Order management and checkout endpoints.
+Rotas de pedidos - checkout e histórico.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
@@ -32,49 +32,8 @@ def checkout(
     current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ) -> OrderResponse:
     """
-    Finaliza compra criando pedido a partir do carrinho.
-
-    Processo automático:
-    1. Valida que carrinho não está vazio
-    2. Valida estoque de todos os produtos
-    3. Cria pedido com status PENDING
-    4. Copia itens do carrinho para o pedido
-    5. Atualiza estoque dos produtos
-    6. Limpa o carrinho
-
-    Requer:
-        Authorization: Bearer <token>
-
-    Request body:
-        {} ← Vazio! Usa carrinho do usuário autenticado
-
-    Returns:
-        OrderResponse: Pedido criado com todos os itens
-
-    Raises:
-        400: Carrinho vazio ou estoque insuficiente
-        401: Não autenticado
-
-    Exemplo de response:
-        {
-            "id": 1,
-            "user_id": 5,
-            "total_price": "7000.00",
-            "status": "pending",
-            "items": [
-                {
-                    "id": 1,
-                    "product_name": "Notebook Dell",
-                    "quantity": 2,
-                    "price": "3500.00",
-                    "subtotal": "7000.00"
-                }
-            ],
-            "created_at": "2024-01-29T15:30:00Z",
-            "updated_at": "2024-01-29T15:30:00Z"
-        }
+    Processo: valida estoque → cria pedido PENDING → copia itens → atualiza estoque → limpa carrinho.
     """
-
     order = OrderService.create_order(db, current_user.id)
 
     items_response = []
@@ -111,47 +70,10 @@ def checkout(
 def list_orders(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-    limit: int = Query(
-        default=10, ge=1, le=100, description="Quantidade de pedidos por página (1-100)"
-    ),
-    offset: int = Query(
-        default=0, ge=0, description="Número de pedidos a pular (paginação)"
-    ),
+    limit: int = Query(default=10, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
 ) -> List[OrderSummary]:
-    """
-    Lista pedidos do usuário autenticado com paginação.
-
-    Retorna versão resumida (sem itens) para não sobrecarregar.
-    Para ver detalhes de um pedido específico, use GET /orders/{id}.
-
-    Ordenação: Mais recentes primeiro.
-
-    Query parameters:
-        - limit: Pedidos por página (default: 10, max: 100)
-        - offset: Pedidos a pular (default: 0)
-
-    Returns:
-        Lista de OrderSummary
-
-    Exemplo de response:
-        [
-            {
-                "id": 5,
-                "total_price": "7000.00",
-                "status": "delivered",
-                "items_count": 2,
-                "created_at": "2024-01-29T15:30:00Z"
-            },
-            {
-                "id": 3,
-                "total_price": "150.00",
-                "status": "pending",
-                "items_count": 1,
-                "created_at": "2024-01-20T10:00:00Z"
-            }
-        ]
-    """
-
+    """Resumido (sem itens). Para detalhes use GET /orders/{id}."""
     orders = OrderService.get_user_orders(db, current_user.id, limit, offset)
 
     summaries = []
@@ -182,23 +104,7 @@ def get_order(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> OrderResponse:
-    """
-    Retorna detalhes completos de um pedido específico.
-
-    Validação automática:
-    - Pedido pertence ao usuário autenticado
-
-    Args:
-        order_id: ID do pedido
-
-    Returns:
-        OrderResponse: Pedido com todos os itens
-
-    Raises:
-        404: Pedido não encontrado ou não pertence ao usuário
-        401: Não autenticado
-    """
-
+    """Valida que pedido pertence ao usuário."""
     order = OrderService.get_order_by_id(db, order_id, current_user.id)
 
     if not order:
@@ -245,31 +151,9 @@ def update_order_status(
     db: Session = Depends(get_db),
 ) -> OrderResponse:
     """
-    idas:
-        - pending → paid, cancelled
-        - paid → shipped, cancelled
-        - shipped → delivered
-        - delivered → (final, não pode mudar)
-        - cancelled → (final, não pode mudar)
-
-    Args:
-        order_id: ID do pedido
-        status_update: Novo status
-
-    Request body:
-        {
-            "status": "paid"
-        }
-
-    Returns:
-        OrderResponse: Pedido atualizado
-
-    Raises:
-        404: Pedido não encontrado
-        400: Transição de status inválida
-        403: Sem permissão (não é admin)
+    Transições válidas: pending→paid/cancelled, paid→shipped/cancelled, shipped→delivered.
+    delivered e cancelled são estados finais.
     """
-
     order = OrderService.update_order_status(db, order_id, status_update.status)
 
     db.refresh(order)

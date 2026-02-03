@@ -19,23 +19,7 @@ from src.models.enums import ProductCategory
 
 class Product(BaseModel):
     """
-    Modelo de produto no sistema.
-
-    Tabela: products
-
-    Campos herdados de BaseModel:
-        - id: int (PK, auto-increment)
-        - created_at: datetime (automático)
-        - updated_at: datetime (automático)
-
-    Campos específicos:
-        - name: Nome do produto
-        - description: Descrição detalhada
-        - price: Preço (Decimal para precisão)
-        - category: Categoria (Enum)
-        - stock: Quantidade em estoque
-        - image_url: URL da imagem (opcional)
-        - is_active: Produto ativo (soft delete)
+    is_active: soft delete (False = produto "deletado" mas mantido no histórico).
     """
 
     __tablename__ = "products"
@@ -67,7 +51,4 @@ class Product(BaseModel):
     )
 
     def __repr__(self) -> str:
-        """
-        Representação em string para debugging.
-        """
         return f"<Product(id={self.id}, name={self.name}, price={self.price})>"
