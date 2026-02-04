@@ -23,7 +23,9 @@ router = APIRouter()
     description="Encontra produtos por similaridade de significado, sem se limitar a palavras-chave.",
 )
 def semantic_search(
-    q: str, limit: int = Query(default=5, ge=1, le=20), db: Session = Depends(get_db)
+    q: str = Query(..., min_length=5, max_length=200),
+    limit: int = Query(default=5, ge=1, le=20),
+    db: Session = Depends(get_db),
 ) -> SearchResponse:
     results = AIService.search_similar_products(db, q, limit)
 
