@@ -1,23 +1,8 @@
-"""
-Core configuration module.
-Carrega variáveis de ambiente e define configurações da aplicação.
-"""
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 
 
 class Settings(BaseSettings):
-    """
-    Configurações da aplicação usando Pydantic Settings.
-
-    Pydantic Settings automaticamente:
-    - Carrega variáveis do arquivo .env
-    - Valida tipos de dados
-    - Fornece valores padrão
-    - Lança erros se variáveis obrigatórias estiverem faltando
-    """
-
     APP_NAME: str = "E-commerce API"
     DEBUG: bool = True
     VERSION: str = "1.0.0"

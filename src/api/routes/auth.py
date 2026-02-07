@@ -1,7 +1,3 @@
-"""
-Rotas de autenticação - registro e login.
-"""
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -23,7 +19,6 @@ router = APIRouter()
     description="Cria uma nova conta de usuário com email, username e senha.",
 )
 def register(user_data: UserCreate, db: Session = Depends(get_db)) -> UserResponse:
-    """Valida unicidade de email/username, faz hash da senha."""
     existing_email = db.query(User).filter(User.email == user_data.email).first()
 
     if existing_email:
@@ -63,7 +58,6 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)) -> UserRespon
     description="Autentica usuário com email e senha, retorna JWT Token.",
 )
 def login(credentials: UserLogin, db: Session = Depends(get_db)) -> TokenResponse:
-    """Verifica credenciais e retorna JWT. 401 se inválido/inativo."""
     user = db.query(User).filter(User.email == credentials.email).first()
 
     if not user:

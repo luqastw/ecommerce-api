@@ -1,17 +1,7 @@
-"""
-Enums used across models.
-"""
-
 from enum import Enum
 
 
 class ProductCategory(str, Enum):
-    """
-    Categorias de produtos disponíveis.
-
-    Herda de str para ser serializável em JSON.
-    """
-
     ELETRONICOS = "eletronicos"
     ROUPAS = "roupas"
     LIVROS = "livros"
@@ -23,16 +13,7 @@ class ProductCategory(str, Enum):
 
 
 class OrderStatus(str, Enum):
-    """
-    Status possíveis de um pedido.
-
-    Fluxo típico:
-    PENDING -> PAID -> SHIPPED -> DELIVERED
-
-    Pode também:
-    PENDING -> CANCELLED
-    """
-
+    """Fluxo: PENDING → PAID → SHIPPED → DELIVERED (ou PENDING → CANCELLED)."""
     PENDING = "pending"
     PAID = "paid"
     SHIPPED = "shipped"

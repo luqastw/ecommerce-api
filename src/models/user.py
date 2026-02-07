@@ -1,30 +1,10 @@
-"""
-User model - represents users table in database.
-"""
-
 from sqlalchemy import Column, String, Boolean
 from sqlalchemy.orm import relationship
 from src.db.base import BaseModel
 
 
 class User(BaseModel):
-    """
-    Modelo de usuário no sistema.
-
-    Tabela: users
-
-    Campos herdados de BaseModel:
-    - id: int (PK, auto-incrementado)
-    - created_at: datetime (automático)
-    - updated_at: datetime (automático)
-
-    Campos específicos:
-    - email: string único (usado pra login)
-    - username: string único (nome de exibição)
-    - hashed_password: string (senha com hash bcrypt)
-    - is_active: bool (usuário ativo/desativado)
-    - is_superuser: bool (admin do sistema)
-    """
+    """is_active: soft delete. is_superuser: admin."""
 
     __tablename__ = "users"
 
@@ -33,7 +13,6 @@ class User(BaseModel):
         unique=True,
         index=True,
         nullable=False,
-        comment="Email do usuário (usado para autenticação).",
     )
 
     username = Column(
@@ -41,31 +20,24 @@ class User(BaseModel):
         unique=True,
         index=True,
         nullable=False,
-        comment="Nome de usuário único.",
     )
 
-    hashed_password = Column(String, nullable=False, comment="Senha com bcrypt.")
+    hashed_password = Column(String, nullable=False)
 
     is_active = Column(
         Boolean,
         default=True,
         nullable=False,
-        comment="Indica se o usuário está ativo no sistema.",
     )
 
     is_superuser = Column(
         Boolean,
         default=False,
         nullable=False,
-        comment="Indica se o usuário tem privilégios de administrador.",
     )
 
     cart = relationship("Cart", back_populates="user", uselist=False)
     orders = relationship("Order", back_populates="user")
 
     def __repr__(self) -> str:
-        """
-        Representação em string pra debugging.
-        """
-
         return f"<User(id={self.id}, email={self.email}, username={self.username})>"

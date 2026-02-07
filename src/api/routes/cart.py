@@ -1,7 +1,3 @@
-"""
-Rotas do carrinho de compras.
-"""
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -72,7 +68,6 @@ def get_cart(
 def get_cart_summary(
     current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ) -> CartSummary:
-    """Leve - só totais, sem lista de itens."""
     cart = CartService.get_cart_with_details(db, current_user.id)
 
     if not cart:
@@ -95,7 +90,6 @@ def add_item_to_cart(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> CartItemResponse:
-    """Se produto já existe no carrinho, soma quantidade."""
     cart_item = CartService.add_item(db, current_user.id, item_data)
 
     db.refresh(cart_item)
@@ -125,7 +119,6 @@ def update_cart_item(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> CartItemResponse:
-    """Valida: item pertence ao usuário, estoque suficiente."""
     cart_item = CartService.update_item_quantity(
         db, current_user.id, item_id, update_data
     )
@@ -170,7 +163,6 @@ def remove_item_cart(
 def clear_cart(
     current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ):
-    """Esvazia carrinho (carrinho em si não é deletado)."""
     CartService.clear_cart(db, current_user.id)
 
     return None

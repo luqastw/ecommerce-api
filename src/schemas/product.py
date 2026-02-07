@@ -1,7 +1,3 @@
-"""
-Schemas de produto para validação de request/response.
-"""
-
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 from decimal import Decimal
 from datetime import datetime
@@ -18,7 +14,6 @@ class ProductBase(BaseModel):
 
 
 class ProductCreate(ProductBase):
-    """Campos adicionais: stock (default 0), image_url (opcional)."""
     stock: int = Field(default=0, gt=0)
     image_url: Optional[str] = Field(None, max_length=500)
 
@@ -37,7 +32,6 @@ class ProductCreate(ProductBase):
 
 
 class ProductUpdate(BaseModel):
-    """Todos os campos opcionais (PATCH)."""
     name: Optional[str] = Field(None, min_length=3, max_length=200)
     description: Optional[str] = None
     price: Optional[Decimal] = Field(None, gt=0)

@@ -1,7 +1,3 @@
-"""
-AI Service - RAG com Groq (LLM) + Sentence Transformers (embeddings locais).
-"""
-
 import numpy as np
 from groq import Groq
 from sentence_transformers import SentenceTransformer
@@ -23,7 +19,6 @@ class AIService:
 
     @staticmethod
     def generate_product_embedding(product: Product) -> np.ndarray:
-        """Gera vetor de 384 dimensões do produto (roda local, sem API)."""
         text = f"""
         {product.name}
         {product.description or ""}
@@ -37,11 +32,7 @@ class AIService:
 
     @staticmethod
     def search_similar_products(db: Session, query: str, limit: int = 5) -> List[dict]:
-        """
-        Busca semântica: vetoriza query → compara com produtos → retorna mais similares.
-        
-        ⚠️  Calcula embeddings em tempo real (ok para poucos produtos, lento em escala).
-        """
+        """Busca semântica: vetoriza query → compara com produtos → retorna mais similares."""
         query_embedding = embedding_model.encode(query)
 
         products = db.query(Product).filter(Product.is_active == True).all()

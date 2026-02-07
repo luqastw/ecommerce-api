@@ -1,7 +1,3 @@
-"""
-Rotas de usuário - perfil e configurações.
-"""
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -29,7 +25,6 @@ def update_current_user(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> UserResponse:
-    """Valida unicidade de email/username se alterados. Faz hash de nova senha."""
     update_data = user_update.model_dump(exclude_unset=True)
 
     if not update_data:
@@ -80,7 +75,7 @@ def update_current_user(
 def deactivate_account(
     current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ):
-    """Soft delete - preserva histórico. Admin pode reativar."""
+    """Soft delete - admin pode reativar."""
     current_user.is_active = False
     db.commit()
 

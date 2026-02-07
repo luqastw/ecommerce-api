@@ -1,7 +1,3 @@
-"""
-Initialize database: create all tables.
-"""
-
 from src.db.base import Base
 from src.db.session import engine
 from src.models.user import User
@@ -10,13 +6,7 @@ from src.models.cart import Cart, CartItem
 
 
 def init_db() -> None:
-    """
-    Cria todas as tabelas no banco de dados.
-
-    IMPORTANTE: Isto é apenas para desenvolvimento/testes.
-    Em produção, use Alembic migrations.
-    """
-
+    """Para dev/testes. Em produção use Alembic."""
     print("Creating tables in database...")
     Base.metadata.create_all(bind=engine)
     print("All tables created.")

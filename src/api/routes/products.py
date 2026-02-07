@@ -1,7 +1,3 @@
-"""
-Rotas de produtos - CRUD com soft delete.
-"""
-
 from typing import List
 from fastapi import APIRouter, HTTPException, status, Depends, Query
 from sqlalchemy.orm import Session

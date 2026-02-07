@@ -1,7 +1,3 @@
-"""
-Dependencies para injeção nas rotas FastAPI.
-"""
-
 from typing import Generator
 from fastapi import status, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -15,7 +11,6 @@ security = HTTPBearer()
 
 
 def get_db() -> Generator[Session, None, None]:
-    """Fornece sessão do banco (abre no início, fecha no finally)."""
     db = SessionLocal()
     try:
         yield db
@@ -27,11 +22,6 @@ def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db),
 ) -> User:
-    """
-    Autentica via JWT. Retorna User ou 401.
-    
-    Valida: token válido, não expirado, usuário existe e está ativo.
-    """
     token = credentials.credentials
 
     payload = decode_access_token(token)
@@ -65,7 +55,6 @@ def get_current_user(
 
 
 def get_current_admin(current_user: User = Depends(get_current_user)) -> User:
-    """Verifica se usuário é admin (is_superuser=True). Retorna User ou 403."""
     if not current_user.is_superuser:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

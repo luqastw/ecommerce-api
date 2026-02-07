@@ -1,14 +1,3 @@
-"""
-Order Service - Business logic for order management and checkout.
-
-Responsabilidades:
-- Criar pedido a partir do carrinho (checkout)
-- Validar estoque antes de finalizar compra
-- Gerenciar status de pedidos
-- Listar histórico de pedidos do usuário
-- Validar transições de status
-"""
-
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import desc
 from fastapi import HTTPException, status
@@ -22,44 +11,10 @@ from src.services.cart_service import CartService
 
 
 class OrderService:
-    """
-    Service para operação de pedidos.
-
-    Todos os métodos são @staticmethod.
-    """
 
     @staticmethod
     def create_order(db: Session, user_id: int) -> Order:
-        """
-        Cria pedido a partir do carrinho do usuário (checkout).
-
-        Fluxo completo (transação atômica):
-        1. Buscar carrinho do usuário
-        2. Validar que carrinho não está vazio
-        3. Validar estoque de TODOS os produtos
-        4. Calcular total do pedido
-        5. Criar registro Order
-        6. Criar registros OrderItem (cópia dos cart items)
-        7. Atualizar estoque dos produtos
-        8. Limpar carrinho
-        9. Commit (tudo ou nada!)
-
-        Args:
-            db: Sessão do banco
-            user_id: ID do usuário
-
-        Returns:
-            Order: Pedido criado com items carregados
-
-        Raises:
-            HTTPException 400: Carrinho vazio
-            HTTPException 400: Estoque insuficiente para algum produto
-
-        Exemplo:
-            order = OrderService.create_order(db, user_id=5)
-            # Carrinho é esvaziado automaticamente
-        """
-
+        """Checkout: valida estoque → cria Order PENDING → copia itens → atualiza estoque → limpa carrinho."""
         cart = (
             db.query(Cart)
             .options(joinedload(Cart.items).joinedload(CartItem.product))
@@ -145,21 +100,6 @@ class OrderService:
     def get_user_orders(
         db: Session, user_id: int, limit: int = 10, offset: int = 0
     ) -> List[Order]:
-        """
-        Lista pedidos do usuário com paginação.
-
-        Pedidos mais recentes primeiro (ordem decrescente por created_at).
-
-        Args:
-            db: Sessão do banco
-            user_id: ID do usuário
-            limit: Quantidade de pedidos por página
-            offset: Pedidos a pular
-
-        Returns:
-            Lista de Orders (sem items carregados - use get_order_by_id para detalhes)
-        """
-
         orders = (
             db.query(Order)
             .filter(Order.user_id == user_id)
@@ -173,20 +113,6 @@ class OrderService:
 
     @staticmethod
     def get_order_by_id(db: Session, order_id: int, user_id: int) -> Optional[Order]:
-        """
-        Busca pedido específico com todos os itens.
-
-        Valida que pedido pertence ao usuário (segurança).
-
-        Args:
-            db: Sessão do banco
-            order_id: ID do pedido
-            user_id: ID do usuário
-
-        Returns:
-            Order com items carregados, ou None se não encontrado
-        """
-
         order = (
             db.query(Order)
             .options(joinedload(Order.items))
@@ -200,26 +126,7 @@ class OrderService:
     def _validade_status_transition(
         current_status: OrderStatus, new_status: OrderStatus
     ) -> bool:
-        """
-        Valida se a transição de status é permitida.
-
-        Regras de negócio:
-        - pending → paid ✅
-        - pending → cancelled ✅
-        - paid → shipped ✅
-        - shipped → delivered ✅
-        - delivered → * ❌ (final)
-        - cancelled → * ❌ (final)
-        - * → pending ❌ (não pode voltar)
-
-        Args:
-            current_status: Status atual
-            new_status: Novo status desejado
-
-        Returns:
-            True se transição é válida, False caso contrário
-        """
-
+        """Transições válidas: pending→paid/cancelled, paid→shipped/cancelled, shipped→delivered."""
         if current_status in [OrderStatus.DELIVERED, OrderStatus.CANCELLED]:
             return False
 
@@ -236,24 +143,6 @@ class OrderService:
     def update_order_status(
         db: Session, order_id: int, new_status: OrderStatus
     ) -> Order:
-        """
-        Atualiza status do pedido (apenas admin).
-
-        Valida transição de status antes de atualizar.
-
-        Args:
-            db: Sessão do banco
-            order_id: ID do pedido
-            new_status: Novo status
-
-        Returns:
-            Order atualizado
-
-        Raises:
-            HTTPException 404: Pedido não encontrado
-            HTTPException 400: Transição de status inválida
-        """
-
         order = db.query(Order).filter(Order.id == order_id).first()
 
         if not order:

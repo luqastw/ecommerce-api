@@ -1,7 +1,3 @@
-"""
-Rotas de pedidos - checkout e histórico.
-"""
-
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List
@@ -31,9 +27,7 @@ router = APIRouter()
 def checkout(
     current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ) -> OrderResponse:
-    """
-    Processo: valida estoque → cria pedido PENDING → copia itens → atualiza estoque → limpa carrinho.
-    """
+    """Valida estoque → cria pedido PENDING → copia itens → atualiza estoque → limpa carrinho."""
     order = OrderService.create_order(db, current_user.id)
 
     items_response = []
@@ -73,7 +67,6 @@ def list_orders(
     limit: int = Query(default=10, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
 ) -> List[OrderSummary]:
-    """Resumido (sem itens). Para detalhes use GET /orders/{id}."""
     orders = OrderService.get_user_orders(db, current_user.id, limit, offset)
 
     summaries = []
@@ -104,7 +97,6 @@ def get_order(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> OrderResponse:
-    """Valida que pedido pertence ao usuário."""
     order = OrderService.get_order_by_id(db, order_id, current_user.id)
 
     if not order:
@@ -150,10 +142,7 @@ def update_order_status(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> OrderResponse:
-    """
-    Transições válidas: pending→paid/cancelled, paid→shipped/cancelled, shipped→delivered.
-    delivered e cancelled são estados finais.
-    """
+    """Transições: pending→paid/cancelled, paid→shipped/cancelled, shipped→delivered."""
     order = OrderService.update_order_status(db, order_id, status_update.status)
 
     db.refresh(order)
